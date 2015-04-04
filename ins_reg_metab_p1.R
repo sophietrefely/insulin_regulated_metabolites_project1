@@ -4,7 +4,7 @@
 #first made a new spreadsheet with only relevent data from the above. This includes uniprot protein IDs and data columns relating to insulin/basal at 20 min insulin stimulation (9 data columns, 3 expts, 3 reps). Note that values are log2.
 #exported spreadsheet as 'humphrey_20_min_data.csv'
 
-## cleaned up data
+##1 cleaned up data
 #there are a lot of missing values denoted by 'NaN'.
 humphrey_20_min_data=read.csv("insulin_regulated_metabolites_project1/humphrey_20_min_data.csv", sep=",", header=TRUE,na.string="NaN")
 fix(humphrey_20_min_data) #fix displays the data table
@@ -29,5 +29,7 @@ dim(no_null_rows_data) # rows 24756 cols 11 - an extra column[1] 'X' was added w
 #made a new matrix without the extra column
 clean_data = no_null_rows_data[,2:11]
 dim(clean_data) #  24756    10
+clean_matrix = as.matrix(clean_data)
 
-##2 Average and visualise data
+##2 visualise data as mean for each row with Std dev
+
