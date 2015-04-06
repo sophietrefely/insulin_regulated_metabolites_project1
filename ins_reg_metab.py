@@ -1,8 +1,8 @@
 """insulin_regulated_metabolites_project
 
-aim: To find metabolites asoociated with insulin regulated proteins (insulin regulted metabolites)
+aim: To find metabolites associated with insulin regulated proteins (insulin regulted metabolites)
 data: using phosphoproteomic data from Humphrey et al, 2013 supp table S2 at 'http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3690479/?report=classic'
-first made a new spreadsheet with only relevent data from the above. This includes uniprot protein IDs and data columns relating to insulin/basal at 20 min insulin stimulation (9 data columns, 3 expts, 3 reps). Note that values are log2.
+first made a new spreadsheet with only relevent data from the above. This includes uniprot protein IDs and data columns relating to insulin/basal at 20 min insulin stimulation (9 data columns, 3 expts, 3 reps). Note that values are log2 (this allows fold change in either direction to be compared).
 exported spreadsheet as 'humphrey_20_min_data.csv'
 """
 ##1 cleaned up data
@@ -37,20 +37,36 @@ for line in data_list:
         if not item == 'NaN':
             new_line.append(item)
     clean_data_list.append(new_line)
-print(clean_data_list[1])
+
+print(clean_data_list[1:5])
 
 ##2 create z-factors for each line of data
 
-#First unlog the data ie convert each integer to 2**(integer)
-unlogged_data_list = []
+#Find mean for each line and assign to uniprot ID, ie column [0]. Add standard deviation (stdev)
+import statistics
+stats_data_list = []
 for line in clean_data_list:
-    unlogged_line = []
-    for item in line[1:]:  #not uniprot id, which is line[0]
-        integer_item = float(item)
-        unlogged_integer_item = 2**(integer_item)
-        unlogged_line.append(unlogged_integer_item)
-    unlogged_data_list.append(unlogged_line)
+    stats_data_line = [line[0]]
+    data = line[1:]  #need to convert strings to floats here to get mean etc
+    float_data = [float(item) for item in data]
+    mean = statistics.mean(float_data)
+    n = len(data)
+    #can't do stdev for 1 value. Therefore set stdev to 0
+    if n==1:
+        stdev = 0
+    else:
+        stdev = statistics.stdev(float_data)
+    #extend instead of append twice so [0] = uniprot id, [1] = mean, [2] = stdev.
+    stats_data_line.extend([mean,stdev,n])
+    stats_data_list.append(stats_data_line)
 
-print(unlogged_data_list[1])
+print(stats_data_list[1:5])
 
-#Plot data as mean for each line with standard devation
+#plot the data to look at close to 1 vs regulated.
+import matplotlib.pyplot as plt
+plt.hist([item[1] for item in stats_data_list if item[1]<10], bins=100, normed=True)
+plt.show()
+
+#plot the data to look at close to 1 vs regulated. NB down regulated will need to be log transformed (next step)       
+#some proteins will have regulated and unregulated sites. Therefore, if a protein has one regulated site it will be designated regulated.
+
