@@ -254,13 +254,12 @@ print(neg_reg_proteins_only[1:5])
 
 #Print protein lists to file as .txt
 #First simplify lists to contain 1 uniprot id per protein
-pos_reg_file = open('/Users/sophietrefely/insulin_regulated_metabolites_project1/pos_ins_reg_proteins.txt', 'w')
-for item in pos_reg_proteins:
-    split_item = item.split(';')
-    single_id = split_item[0]
-    pos_reg_file.write(single_id + '\n')
-pos_reg_file.close()
-
+with open('/Users/sophietrefely/insulin_regulated_metabolites_project1/pos_ins_reg_proteins.txt', 'w') as pos_reg_file:
+    for item in pos_reg_proteins:
+        split_item = item.split(';')
+        single_id = split_item[0]
+        pos_reg_file.write(single_id + '\n')
+        
 neg_reg_file = open('/Users/sophietrefely/insulin_regulated_metabolites_project1/neg_ins_reg_proteins.txt', 'w')
 for item in neg_reg_proteins_only:
     split_item = item.split(';')
@@ -275,6 +274,32 @@ for item in non_reg_proteins:
     non_reg_file.write(single_id + '\n')
 non_reg_file.close()
 
+
+#First must convert uniprot ids to reactome ids.
+#There is a conversion list available for download from the API
+#download conversion list from api:
+import requests
+conversion_url = 'http://reactomews.oicr.on.ca:8080/ReactomeRESTfulAPI/RESTfulWS/getUniProtRefSeqs'
+
+
+#convert uniprots to make reactome_id lists. 
+
+reactome_id_list = [5934172]#PFKFB3 example
+
 # Access the reactome API: http://reactomews.oicr.on.ca:8080/ReactomeRESTfulAPI/ReactomeRESTFulAPI.html
 # Looks like the closest thing to what I want to extract (interacting metabolites) is 'PathwayParticipants: pathwayParticipants/{dbId : \\d+}'
-#Thiscomes in a messy format though
+import requests
+metabolite_dict = {}  #Want to store the data for metabolites in a dictionary with keys = metabolites and values = number of times the key comes up.
+for item in reactome_id_list:
+    reactome_id = str(item)
+    url = 'http://reactomews.oicr.on.ca:8080/ReactomeRESTfulAPI/RESTfulWS/pathwayParticipants/' + reactome_id
+    response = requests.get(url) #can check the output on postman: '
+    response.json() #convert to JSON
+    for result in response.json():
+        if result[u'schemaClass'] == 'SimpleEntity': #response for compounds contains 'SimpleEntity', whereas proteins with interactions are 'DefinedSet'.
+            print(result['displayName'])
+            print(result['dbId'])
+            metabolite = result['displayName'] #store metabolite and its reactome ID
+            metabolite_dict[metabolite] = metabolite_dict.get(metabolite, 0) + 1  #use the dictionary to count amount of occurances for each metabolite.
+print(metabolite_dict)
+
